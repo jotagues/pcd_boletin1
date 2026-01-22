@@ -1,2 +1,1 @@
-print("Hola soy B")
 print("Hola soy A")
