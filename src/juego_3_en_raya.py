@@ -99,11 +99,35 @@ def test_movimiento_incorrecto(tablero_dimension, movimientos_ocupados):
 
 
 def jugada_ganadora(movimientos_jugador):
-    #Comprobamos si hay 3 fichas en una fila
+    
     for fila in movimientos_jugador:
         movimientos_columna = movimientos_jugador[fila]
-        if len(movimientos_columna)==3:
+        if len(movimientos_columna) == 3:
             return True
+
+    for col in range(3):
+        contador = 0
+        for fila in range(3):
+            if col in movimientos_jugador.get(fila, []):
+                contador += 1
+        if contador == 3:
+            return True
+
+    
+    contador_diag1 = 0
+    for i in range(3):
+        if i in movimientos_jugador.get(i, []):
+            contador_diag1 += 1
+    if contador_diag1 == 3:
+        return True
+
+    contador_diag2 = 0
+    for i in range(3):
+        if (2 - i) in movimientos_jugador.get(i, []):
+            contador_diag2 += 1
+    if contador_diag2 == 3:
+        return True
+
     return False
 
 @pytest.fixture
