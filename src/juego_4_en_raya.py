@@ -1,0 +1,238 @@
+fichas = ['o', 'x']
+
+def mostrar_tablero(n, movimientos_jugadores):
+    for i in range(n):
+        for j in range(n):
+            casilla_vacia = True
+            for k in range(len(movimientos_jugadores)):
+                movimientos_jugador = movimientos_jugadores[k]
+                if i in movimientos_jugador:
+                    if j in movimientos_jugador[i]:
+                        print(fichas[k], end='')
+                        casilla_vacia = False
+            if casilla_vacia:
+                print('_ ', end='')
+        print('\n')
+
+if __name__ == "__main__":
+    # Pedimos el tamaño del tablero en que se va a realizar el juego
+    n = int(input('Introduce el tamaño del tablero cuadrado: '))
+    casillas_libres = n * n
+    jugador_activo = 0
+    movimientos_jugador_1 = {}
+    movimientos_jugador_2 = {}
+    movimientos_jugadores = [movimientos_jugador_1, movimientos_jugador_2]
+    
+    mostrar_tablero(n, movimientos_jugadores)
+    
+
+# --------------------------------------------------
+
+import pytest
+
+@pytest.fixture
+def tablero_dimension():
+    return 3
+
+@pytest.fixture
+def movimientos_ambos_jugadores():
+    return [{}, {}]
+
+def test_mostrar_tablero(tablero_dimension, movimientos_ambos_jugadores, capsys):
+    mostrar_tablero(tablero_dimension, movimientos_ambos_jugadores)
+    captured = capsys.readouterr()
+    lineas = captured.out.strip().split("\n")
+    lineas = [l for l in lineas if l]
+    assert len(lineas) == tablero_dimension
+    for linea in lineas:
+        assert len(linea.replace(' ', '')) == tablero_dimension
+        
+def movimiento_valido(n, x, y, movimientos_otro_jugador):
+    if x > n or y > n:
+        return False
+    
+    if x in movimientos_otro_jugador:
+        movimientos_en_columna= movimientos_otro_jugador[x]
+        if y in movimientos_en_columna:
+            return False
+
+    return True
+
+@pytest.fixture
+def movimientos_vacios():
+    return {}, {}
+
+@pytest.fixture
+
+def movimientos_vacios():
+    return {}, {}
+
+@pytest.fixture
+def movimientos_ocupados():
+    return {2: [3]}
+
+@pytest.fixture
+def movimientos_fuera_tablero(tablero_dimension):
+    return tablero_dimension + 1, tablero_dimension + 1
+
+
+def test_movimiento_columna_fuera_tablero(tablero_dimension, movimientos_vacios):
+    movimientos_otro_jugador, _ = movimientos_vacios
+    x = 1
+    y = tablero_dimension + 1
+    assert not movimiento_valido(tablero_dimension, x, y, movimientos_otro_jugador)
+
+def test_movimiento_fila_tablero(tablero_dimension, movimientos_vacios):
+	movimientos_otro_jugador, _ = movimientos_vacios
+	x = tablero_dimension + 1
+	y = 1
+	assert not movimiento_valido(tablero_dimension, x, y, movimientos_otro_jugador)
+
+
+def test_movimiento_fila_y_columna_fuera_tablero(tablero_dimension, movimientos_vacios, movimientos_fuera_tablero):
+    movimientos_otro_jugador, _ = movimientos_vacios
+    x, y = movimientos_fuera_tablero
+    assert not movimiento_valido(tablero_dimension, x, y, movimientos_otro_jugador)
+
+
+def test_movimiento_incorrecto(tablero_dimension, movimientos_ocupados):
+    x = 2
+    y = 3
+    assert not movimiento_valido(tablero_dimension, x, y, movimientos_ocupados)
+
+
+
+def jugada_ganadora(movimientos_jugador):
+    #Comprobamos si hay 3 fichas en una fila
+    for fila in movimientos_jugador:
+        movimientos_columna = movimientos_jugador[fila]
+        if len(movimientos_columna)==3:
+            return True
+    return False
+
+@pytest.fixture
+def movimientos_no_ganador():
+    return {2: [2, 3]}
+
+@pytest.fixture
+def movimientos_ganador():
+    return {2: [1, 2, 3]}
+
+def test_no_ganador(movimientos_no_ganador):
+    assert not jugada_ganadora(movimientos_no_ganador)
+
+def test_ganador(movimientos_ganador):
+    assert jugada_ganadora(movimientos_ganador)
+
+
+import os
+import winsound
+
+fichas = ['o', 'x']
+
+def mostrar_tablero(n, movimientos_jugadores):
+    for i in range(n):
+        for j in range(n):
+            casilla_vacia = True
+            for k in range(len(movimientos_jugadores)):
+                movimientos_jugador = movimientos_jugadores[k]
+                if i in movimientos_jugador:
+                    if j in movimientos_jugador[i]:
+                        print(fichas[k], end='')
+                        casilla_vacia = False
+            if casilla_vacia:
+                print('_ ', end='')
+        print('\n')
+
+def movimiento_valido(n, x, y, movimientos_otro_jugador):
+    if x > n or y > n:
+        return False
+    if x in movimientos_otro_jugador:
+        movimientos_en_columna = movimientos_otro_jugador[x]
+        if y in movimientos_en_columna:
+            return False
+    return True
+
+def jugada_ganadora(movimientos_jugador, n):
+    # OBJETIVO: 4 en raya
+    OBJETIVO = 4
+    
+    # Matriz auxiliar para facilitar la comprobación
+    tablero_check = [[' ' for _ in range(n)] for _ in range(n)]
+    for x, col_filas in movimientos_jugador.items():
+        for y in col_filas:
+            tablero_check[x][y] = 'X' # Marcamos las casillas del jugador
+
+    # Comprobar Horizontal, Vertical y Diagonales
+    for x in range(n):
+        for y in range(n):
+            if tablero_check[x][y] == 'X':
+                # Horizontal
+                if y + OBJETIVO <= n and all(tablero_check[x][y+k] == 'X' for k in range(OBJETIVO)):
+                    return True
+                # Vertical
+                if x + OBJETIVO <= n and all(tablero_check[x+k][y] == 'X' for k in range(OBJETIVO)):
+                    return True
+                # Diagonal Principal
+                if x + OBJETIVO <= n and y + OBJETIVO <= n and all(tablero_check[x+k][y+k] == 'X' for k in range(OBJETIVO)):
+                    return True
+                # Diagonal Inversa
+                if x + OBJETIVO <= n and y - OBJETIVO + 1 >= 0 and all(tablero_check[x+k][y-k] == 'X' for k in range(OBJETIVO)):
+                    return True
+    return False
+
+if __name__ == "__main__":
+    print("--- BIENVENIDO AL 4 EN RAYA ---")
+    # Forzamos que el tablero sea minimo de 4
+    n = 0
+    while n < 4:
+        try:
+            n = int(input('Introduce el tamaño del tablero (minimo 4): '))
+        except:
+            pass
+
+    casillas_libres = n * n
+    jugador_activo = 0
+    movimientos_jugador_1 = {}
+    movimientos_jugador_2 = {}
+    movimientos_jugadores = [movimientos_jugador_1, movimientos_jugador_2]
+
+    mostrar_tablero(n, movimientos_jugadores)
+
+    while casillas_libres > 0:
+        casilla_jugador = input(f"JUGADOR {jugador_activo+1}: Introduce movimiento (x,y): ")
+        
+        try:
+            casilla_jugador = casilla_jugador.strip()
+            x = int(casilla_jugador.split(',')[0]) - 1
+            y = int(casilla_jugador.split(',')[1]) - 1
+        except:
+            print("Formato invalido. Usa x,y")
+            continue
+
+        print(casilla_jugador, x, y)
+        movimientos_jugador_activo = movimientos_jugadores[jugador_activo]
+        movimientos_otro_jugador = movimientos_jugadores[(jugador_activo+1)%2]
+
+        if movimiento_valido(n, x, y, movimientos_otro_jugador):
+            mov_col = movimientos_jugador_activo.get(x, [])
+            mov_col.append(y)
+            movimientos_jugador_activo[x] = mov_col
+
+            clear = lambda: os.system('cls')
+            clear()
+            mostrar_tablero(n, movimientos_jugadores)
+            
+            if jugada_ganadora(movimientos_jugador_activo, n):
+                print(f"¡ENHORABUENA EL JUGADOR {jugador_activo+1} HA GANADO AL 4 EN RAYA!")
+                break
+        else:
+            print('\a')
+            try:
+                winsound.Beep(2000, 1000)
+            except:
+                pass
+            print("Movimiento invalido.")
+
+        casillas_libres -= 1
+        jugador_activo = (jugador_activo + 1) % 2
